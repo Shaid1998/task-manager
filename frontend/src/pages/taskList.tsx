@@ -14,44 +14,45 @@ export default function TaskList() {
     const [description, setDescription] = useState("");
 
     // 📌 Fetch Tasks
-    const fetchTasks = () => {
-        API.get("/tasks").then((res) => {
-            setTasks(res.data);
-        });
+    const fetchTasks = async () => {
+        const res = await API.get("/tasks");
+        setTasks(res.data);
     };
 
     useEffect(() => {
         fetchTasks();
     }, []);
 
-    // ➕ Create Task
-    const createTask = () => {
-        if (!title) return;
+    // ➕ Create Task (no reload)
+    const createTask = async () => {
+        if (!title.trim()) return;
 
-        API.post("/tasks", {
+        const res = await API.post("/tasks", {
             title,
             description,
-        }).then(() => {
-            setTitle("");
-            setDescription("");
-            fetchTasks();
         });
+
+        setTasks((prev) => [res.data, ...prev]); // add instantly
+        setTitle("");
+        setDescription("");
     };
 
-    // 🔄 Update Status
-    const updateStatus = (id: number, status: string) => {
-        API.put(`/tasks/${id}`, {
-            status,
-        }).then(() => {
-            fetchTasks();
-        });
+    // 🔄 Update Status (no reload)
+    const updateStatus = async (id: number, status: Task["status"]) => {
+        await API.put(`/tasks/${id}`, { status });
+
+        setTasks((prev) =>
+            prev.map((task) =>
+                task.id === id ? { ...task, status } : task
+            )
+        );
     };
 
-    // ❌ Delete Task
-    const deleteTask = (id: number) => {
-        API.delete(`/tasks/${id}`).then(() => {
-            fetchTasks();
-        });
+    // ❌ Delete Task (no reload)
+    const deleteTask = async (id: number) => {
+        await API.delete(`/tasks/${id}`);
+
+        setTasks((prev) => prev.filter((task) => task.id !== id));
     };
 
     return (
@@ -89,12 +90,17 @@ export default function TaskList() {
                 >
                     <h3>{task.title}</h3>
                     <p>{task.description}</p>
-                    <p>Status: {task.status}</p>
+
+                    <p>
+                        Status: <strong>{task.status}</strong>
+                    </p>
 
                     {/* STATUS UPDATE */}
                     <select
                         value={task.status}
-                        onChange={(e) => updateStatus(task.id, e.target.value)}
+                        onChange={(e) =>
+                            updateStatus(task.id, e.target.value as Task["status"])
+                        }
                     >
                         <option value="pending">Pending</option>
                         <option value="in_progress">In Progress</option>
