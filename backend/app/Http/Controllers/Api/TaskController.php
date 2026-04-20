@@ -18,7 +18,8 @@ class TaskController extends Controller
         $data = $request->validate([
             'title' => 'required|string',
             'description' => 'nullable|string',
-            'status' => 'in:pending,in_progress,completed'
+            'status' => 'in:pending,in_progress,completed',
+            'priority' => 'in:low,medium,high'
         ]);
 
         return Task::create($data);
@@ -34,7 +35,8 @@ class TaskController extends Controller
         $data = $request->validate([
             'title' => 'string',
             'description' => 'nullable|string',
-            'status' => 'in:pending,in_progress,completed'
+            'status' => 'in:pending,in_progress,completed',
+            'priority' => 'in:low,medium,high'
         ]);
 
         $task->update($data);
